@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Heart Disease Predictor — Simple UI</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; padding:20px}
+    .card{max-width:720px; margin:20px auto; background:white; padding:18px; border-radius:10px;
+          box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    .row{display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap}
+    label{font-size:13px; color:#333}
+    select, input[type="number"], input[type="text"]{
+      padding:8px; font-size:14px; border:1px solid #ddd; border-radius:6px; width:100%;
+    }
+    .col{flex:1 1 200px; min-width:160px}
+    button{padding:10px 14px; border:none; background:#007bff; color:white; border-radius:8px; cursor:pointer}
+    button.secondary{background:#6c757d}
+    .result{margin-top:14px; font-weight:600}
+    .error{color:#b00020; margin-top:10px}
+    .small{font-size:13px; color:#666}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Heart Disease Predictor</h2>
+    <p class="small">Fill fields or use <em>Fill sample</em>. Categorical fields are dropdowns to match your CSV labels.</p>
+
+    <div id="form">
+
+      <div class="row">
+        <div class="col">
+          <label>Age</label>
+          <input id="Age" type="number" step="1" placeholder="e.g. 55">
+        </div>
+
+        <div class="col">
+          <label>Gender</label>
+          <select id="Gender">
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+
+        <div class="col">
+          <label>Blood Pressure</label>
+          <input id="Blood Pressure" type="number" step="0.1" placeholder="e.g. 140">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Cholesterol Level</label>
+          <input id="Cholesterol Level" type="number" step="0.1" placeholder="e.g. 200">
+        </div>
+
+        <div class="col">
+          <label>Exercise Habits</label>
+          <select id="Exercise Habits">
+            <option>High</option><option>Medium</option><option>Low</option>
+          </select>
+        </div>
+
+        <div class="col">
+          <label>Smoking</label>
+          <select id="Smoking"><option>No</option><option>Yes</option></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><label>Family Heart Disease</label>
+          <select id="Family Heart Disease"><option>No</option><option>Yes</option></select>
+        </div>
+
+        <div class="col"><label>Diabetes</label>
+          <select id="Diabetes"><option>No</option><option>Yes</option></select>
+        </div>
+
+        <div class="col"><label>BMI</label>
+          <input id="BMI" type="number" step="0.1" placeholder="e.g. 27.5">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><label>High Blood Pressure</label>
+          <select id="High Blood Pressure"><option>No</option><option>Yes</option></select>
+        </div>
+
+        <div class="col"><label>Low HDL Cholesterol</label>
+          <select id="Low HDL Cholesterol"><option>No</option><option>Yes</option></select>
+        </div>
+
+        <div class="col"><label>High LDL Cholesterol</label>
+          <select id="High LDL Cholesterol"><option>No</option><option>Yes</option></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><label>Alcohol Consumption</label>
+          <select id="Alcohol Consumption"><option>None</option><option>Low</option><option>Medium</option><option>High</option></select>
+        </div>
+
+        <div class="col"><label>Stress Level</label>
+          <select id="Stress Level"><option>Low</option><option>Medium</option><option>High</option></select>
+        </div>
+
+        <div class="col"><label>Sleep Hours</label>
+          <input id="Sleep Hours" type="number" step="0.1" placeholder="e.g. 6">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><label>Sugar Consumption</label>
+          <select id="Sugar Consumption"><option>Low</option><option>Medium</option><option>High</option></select>
+        </div>
+
+        <div class="col"><label>Triglyceride Level</label>
+          <input id="Triglyceride Level" type="number" step="0.1" placeholder="e.g. 150">
+        </div>
+
+        <div class="col"><label>Fasting Blood Sugar</label>
+          <input id="Fasting Blood Sugar" type="number" step="0.1" placeholder="e.g. 90">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><label>CRP Level</label>
+          <input id="CRP Level" type="number" step="0.01" placeholder="e.g. 1.2">
+        </div>
+
+        <div class="col"><label>Homocysteine Level</label>
+          <input id="Homocysteine Level" type="number" step="0.1" placeholder="e.g. 10">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button onclick="doPredict()">Predict</button>
+        <button class="secondary" onclick="fillSample()">Fill sample</button>
+        <button class="secondary" onclick="clearForm()">Clear</button>
+      </div>
+
+      <div id="result" class="result"></div>
+      <div id="error" class="error"></div>
+    </div>
+  </div>
+
+<script>
+  // list of fields in exact order your backend expects
+  const FIELDS = [
+    "Age","Gender","Blood Pressure","Cholesterol Level","Exercise Habits","Smoking",
+    "Family Heart Disease","Diabetes","BMI","High Blood Pressure","Low HDL Cholesterol",
+    "High LDL Cholesterol","Alcohol Consumption","Stress Level","Sleep Hours",
+    "Sugar Consumption","Triglyceride Level","Fasting Blood Sugar","CRP Level","Homocysteine Level"
+  ];
+
+  function buildPayload() {
+    const payload = {};
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f);
+      payload[f] = el ? el.value : "";
+    });
+    return payload;
+  }
+
+  function doPredict() {
+    document.getElementById('result').textContent = "Predicting…";
+    document.getElementById('error').textContent = "";
+    const payload = buildPayload();
+
+    fetch("/predict", {   // if you are serving index.html from Flask on :5000 this will call the same server
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload),
+    })
+    .then(async res => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error("Server returned " + res.status + ": " + text);
+      }
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById('result').innerHTML = `Result: <strong>${data.result}</strong><br>Probability: ${data.probability}`;
+    })
+    .catch(err => {
+      document.getElementById('result').textContent = "";
+      document.getElementById('error').textContent = "Error: " + err.message;
+      console.error("Predict error:", err);
+    });
+  }
+
+  function fillSample(){
+    // sample values derived from your dataset (strings match training labels)
+    const sample = {
+      "Age":55,"Gender":"Male","Blood Pressure":140,"Cholesterol Level":200,
+      "Exercise Habits":"Medium","Smoking":"No","Family Heart Disease":"Yes",
+      "Diabetes":"No","BMI":27.5,"High Blood Pressure":"No","Low HDL Cholesterol":"No",
+      "High LDL Cholesterol":"No","Alcohol Consumption":"Moderate","Stress Level":"Medium",
+      "Sleep Hours":6,"Sugar Consumption":"Low","Triglyceride Level":150,"Fasting Blood Sugar":90,
+      "CRP Level":1.2,"Homocysteine Level":10
+    };
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f);
+      if(el) el.value = sample[f] !== undefined ? sample[f] : "";
+    });
+  }
+
+  function clearForm(){
+    FIELDS.forEach(f => { const el=document.getElementById(f); if(el) el.value=""; });
+    document.getElementById('result').textContent = "";
+    document.getElementById('error').textContent = "";
+  }
+</script>
+</body>
+</html>
